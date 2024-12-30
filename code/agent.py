@@ -14,8 +14,8 @@ import numpy as np
 import chess
 
 import os
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 class Agent:
     def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN):
@@ -70,9 +70,9 @@ class Agent:
         Save the current model to a file
         """
         if timestamped:
-            self.model.save(f"{config.MODEL_FOLDER}/model-{time.time()}.h5")
+            self.model.save(f"{config.MODEL_FOLDER}/model-{time.time()}.{config.MODEL_FORMAT}")
         else:
-            self.model.save(f"{config.MODEL_FOLDER}/model.h5")
+            self.model.save(f"{config.MODEL_FOLDER}/model.{config.MODEL_FORMAT}")
 
     def predict(self, data):
         """

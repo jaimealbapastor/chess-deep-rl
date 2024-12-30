@@ -1,9 +1,12 @@
 import argparse
 import os
 import tensorflow as tf
-from keras.models import Sequential
+
+from keras import Sequential
 from keras.layers import Activation, Dense, Dropout, Flatten, Conv2D, BatchNormalization, LeakyReLU, Input
+
 from tensorflow.keras.optimizers import Adam
+
 # from keras.optimizer_v2 import adam
 from keras.layers import add as add_layer
 from keras.models import Model
@@ -157,5 +160,5 @@ if __name__ == "__main__":
         os.makedirs(args['model_folder'])
 
     # save the model
-    print(f"Saving model to {args['model_folder']} as {args['model_name']}.h5 ...")
-    model.save(os.path.join(args['model_folder'], args['model_name']) + '.h5')
+    print(f"Saving model to {args['model_folder']} as {args['model_name']}.{config.MODEL_FORMAT} ...")
+    model.save(os.path.join(args['model_folder'], args['model_name']) + '.'+config.MODEL_FORMAT )

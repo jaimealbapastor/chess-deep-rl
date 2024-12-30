@@ -22,6 +22,7 @@ class Game:
         self.black = black
 
         self.memory = []
+        self.memory_folder = config.MEMORY_DIR
 
         self.reset()
 
@@ -55,7 +56,7 @@ class Game:
             logging.info(f"\n{self.env.board}")
             logging.info(f"Value according to white: {self.white.mcts.root.value}")
             logging.info(f"Value according to black: {self.black.mcts.root.value}")
-            if os.environ.get("SELFPLAY_SHOW_BOARD") == "true":
+            if config.SELFPLAY_SHOW_BOARD:
                 self.GUI.gameboard.board.set_fen(self.env.board.fen()) 
                 self.GUI.draw()
 
@@ -140,6 +141,7 @@ class Game:
 
         # return the previous move and the new move
         return (previous_moves[1], best_move)
+    
 
     def save_to_memory(self, state, moves) -> None:
         """
@@ -151,6 +153,9 @@ class Game:
             e.action.uci(): e.N / sum_move_visits for e in moves}
         # winner gets added after game is over
         self.memory[-1].append((state, search_probabilities, None))
+        
+    def set_mem_folder(self, memory_folder:str) -> None:
+        self.memory_folder = memory_folder
 
     def save_game(self, name: str = "game", full_game: bool = False) -> None:
         """
@@ -162,9 +167,13 @@ class Game:
             # if the game result was not estimated, save the game id to a seperate file (to look at later)
             with open("full_games.txt", "a") as f:
                 f.write(f"{game_id}.npy\n")
-        np.save(os.path.join(config.MEMORY_DIR, game_id), self.memory[-1])
+        else:
+            with open("nonfinished_games.txt", "a") as f:
+                f.write(f"{game_id}.npy\n")
+
+        np.save(os.path.join(self.memory_folder, game_id), self.memory[-1])
         logging.info(
-            f"Game saved to {os.path.join(config.MEMORY_DIR, game_id)}.npy")
+            f"Game saved to {os.path.join(self.memory_folder, game_id)}.npy")
         logging.info(f"Memory size: {len(self.memory)}")
 
 
@@ -178,6 +187,7 @@ class Game:
         for puzzle in puzzles.itertuples():
             self.env.fen = puzzle.fen
             self.env.reset()
+            
             # play the first move
             moves = puzzle.moves.split(" ")
             self.env.board.push_uci(moves.pop(0))
@@ -199,6 +209,7 @@ class Game:
             if not self.env.board.is_game_over():
                 continue
             logging.info(f"Puzzle complete. Ended after {counter} moves: {self.env.board.result()}")
+            
             # save game result to memory for all games
             winner = Game.get_winner(self.env.board.result())
             for index, element in enumerate(self.memory[-1]):
@@ -227,7 +238,7 @@ class Game:
         start_time = time.time()
         puzzles: pd.DataFrame = pd.read_csv(filename, header=None)
         # drop unnecessary columns
-        puzzles = puzzles.drop(columns=[0, 4, 5, 6, 8])
+        puzzles = puzzles.drop(columns=[0, 4, 5, 6, 8, 9])
         # set column names
         puzzles.columns = ["fen", "moves", "rating", "type"]
         # only keep puzzles where type contains "mate"

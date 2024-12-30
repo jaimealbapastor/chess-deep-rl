@@ -21,7 +21,7 @@ from GUI.display import GUI
 # set logging config
 logging.basicConfig(level=logging.INFO, format=' %(message)s')
 
-def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False) -> Game:
+def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False, model_path=None) -> Game:
     """
     Setup function to set up a game. 
     This can be used in both the self-play and puzzle solving function
@@ -40,7 +40,6 @@ def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False) 
     env = ChessEnv(fen=starting_position)
 
     # create agents
-    model_path = os.path.join(config.MODEL_FOLDER, "model.h5")
     white = Agent(local_predictions, model_path, env.board.fen())
     black = Agent(local_predictions, model_path, env.board.fen())
 
@@ -52,7 +51,8 @@ def self_play(local_predictions=False):
     """
     game = setup(local_predictions=local_predictions)
 
-    show_board = os.environ.get("SELFPLAY_SHOW_BOARD") == "true"
+    # show_board = os.environ.get("SELFPLAY_SHOW_BOARD") == "true"
+    show_board = config.SELFPLAY_SHOW_BOARD
 
     # play games continuously
     if show_board:
@@ -62,7 +62,7 @@ def self_play(local_predictions=False):
         if show_board:
             game.GUI.gameboard.board.set_fen(game.env.board.fen())
             game.GUI.draw()
-        game.play_one_game(stochastic=True)
+        game.play_one_game(stochastic=True)        
 
 def puzzle_solver(puzzles, local_predictions=False):
     """
@@ -106,8 +106,13 @@ if __name__ == "__main__":
         print(f"Server is ready on {s.getsockname()}!")
         s.close()
     
+    
     if args['type'] == 'selfplay':
-        self_play(local_predictions)
+        # self_play(local_predictions)
+        
+        p_count = 8
+        with Pool(processes=p_count) as pool:
+            pool.map(self_play, [None for _ in range(p_count)])
     else:
         puzzles = Game.create_puzzle_set(filename=args['puzzle_file'], type=args['puzzle_type'])
         puzzle_solver(puzzles, local_predictions)

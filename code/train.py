@@ -100,7 +100,7 @@ class Trainer:
 
     def save_model(self):
         os.makedirs(config.MODEL_FOLDER, exist_ok=True)
-        path = f"{config.MODEL_FOLDER}/model-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.h5"
+        path = f"{config.MODEL_FOLDER}/model-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.{config.MODEL_FORMAT}"
         save_model(self.model, path)
         print(f"Model trained. Saved model to {path}")
 
@@ -124,6 +124,7 @@ if __name__ == "__main__":
         if file.endswith('.npy'):
             data.append(np.load(f"{folder}/{file}", allow_pickle=True))
     data = np.concatenate(data)
+    print(data)
     # count where third field is 0
     print(f"{len(data[data[:,2] > 0])} positions won by white")
     print(f"{len(data[data[:,2] < 0])} positions won by black")

@@ -10,15 +10,15 @@ import numpy as np
 import threading
 import utils
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 logging.basicConfig(level=logging.INFO, format=' %(message)s')
 
-model = load_model(config.MODEL_FOLDER + "/model.h5")
+model = load_model(config.MODEL_FOLDER + "/untrained.keras")
 
 @tf.function(experimental_follow_type_hints=True)
 def predict(args: tf.Tensor) -> Tuple[list[tf.float32], list[list[tf.float32]]]:

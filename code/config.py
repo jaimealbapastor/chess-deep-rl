@@ -1,10 +1,10 @@
 # config file: includes parameters for the model and the mcts tree
 import os
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # ============= MCTS =============
-SIMULATIONS_PER_MOVE = int(os.environ.get("SIMULATIONS_PER_MOVE", 400))
+SIMULATIONS_PER_MOVE = int(os.environ.get("SIMULATIONS_PER_MOVE", 200))
 
 # exploration parameters 
 C_base = 20000
@@ -14,7 +14,7 @@ DIRICHLET_NOISE = 0.3
 
 # limit the amount of moves played in a game
 MAX_PUZZLE_MOVES = 4
-MAX_GAME_MOVES = 200
+MAX_GAME_MOVES = 400
 
 # ============= NEURAL NETWORK INPUTS =============
 # 2 players, 6 pieces, 8x8 board
@@ -55,6 +55,7 @@ AMOUNT_OF_RESIDUAL_BLOCKS = 19
 
 # where to save the model
 MODEL_FOLDER = os.environ.get("MODEL_FOLDER" ,'./models')
+MODEL_FORMAT = "keras" # previously "h5"
 
 # ============= TRAINING PARAMETERS =============
 BATCH_SIZE = 64
@@ -66,3 +67,5 @@ MAX_REPLAY_MEMORY = 1000000
 
 # ============= SOCKET CONFIGURATION =============
 SOCKET_BUFFER_SIZE = 8192
+
+SELFPLAY_SHOW_BOARD = True
