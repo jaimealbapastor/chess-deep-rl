@@ -1,7 +1,0 @@
-python-chess
-matplotlib
-numpy
-tqdm
-typing_extensions
-tensorflow-gpu
-python-dotenv

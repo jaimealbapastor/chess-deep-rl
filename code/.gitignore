@@ -1,5 +1,6 @@
 __pycache__
 models/*.h5
+models/*.keras
 models/old/*
 memory/[^.]*
 plots/old/*
