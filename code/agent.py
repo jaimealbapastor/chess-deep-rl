@@ -18,7 +18,7 @@ import os
 # load_dotenv()
 
 class Agent:
-    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN):
+    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN, pbar_i = None):
         """
         An agent is an object that can play chessmoves on the environment.
         Based on the parameters, it can play with a local model, or send its input to a server.
@@ -47,7 +47,7 @@ class Agent:
                 exit(1)
             logging.info(f"Agent connected to server {server}:{port}")
 
-        self.mcts = MCTS(self, state=state)
+        self.mcts = MCTS(self, state=state, pbar_i=pbar_i)
         
 
     def build_model(self) -> Model:
@@ -58,12 +58,12 @@ class Agent:
         model = model_builder.build_model()
         return model
 
-    def run_simulations(self, n: int = 1):
+    def run_simulations(self, n: int = 1, step_num = None):
         """
         Run n simulations of the MCTS algorithm. This function gets called every move.
         """
-        print(f"Running {n} simulations...")
-        self.mcts.run_simulations(n)
+        # print(f"Running {n} simulations...")
+        self.mcts.run_simulations(n, step_num)
 
     def save_model(self, timestamped: bool = False):
         """
@@ -89,20 +89,61 @@ class Agent:
         """
         Send data to the server and get the prediction
         """
-        # send data to server
-        self.socket_to_server.send(f"{len(data.flatten()):010d}".encode('ascii'))
-        self.socket_to_server.send(data)
-        # get msg length
-        data_length = self.socket_to_server.recv(10)
-        data_length = int(data_length.decode("ascii"))
-        # get prediction
-        response = utils.recvall(self.socket_to_server, data_length)
-        # decode response
-        response = response.decode("ascii")
-        # json to dict
-        response = json.loads(response)
-        # unpack dictionary to tuple
-        return np.array(response["prediction"]), response["value"]
+        
+        logging.debug(f"Data to send: {data}")
+        
+        # Prepare the request payload
+        request = json.dumps({
+            "action": "predict",
+            "data": data.flatten().tolist()
+        }).encode('ascii')
+        # Send data to server
+        # self.socket_to_server.send(f"{len(request):010d}".encode('ascii'))
+        self.socket_to_server.send(f"{len(request):010d}".encode('ascii'))
+        self.socket_to_server.send(request)
+        
+        try:
+            # Receive the response length
+            response_length = self.socket_to_server.recv(10)
+            if not response_length:
+                raise ConnectionError("Server closed the connection or sent an empty response length.")
+            
+            response_length = int(response_length.decode("ascii"))
+            
+            # Receive the full response
+            response = utils.recvall(self.socket_to_server, response_length)
+            if not response:
+                raise ConnectionError("Server closed the connection or sent an empty response.")
+            
+            # Decode and parse the response
+            response = json.loads(response.decode("ascii"))
+            
+            # Check for errors in the response
+            if response.get("status") == "error":
+                raise ValueError(f"Server responded with an error: {response.get('message')}")
+            
+            # Handle the successful response for a prediction request
+            if "prediction" in response and "value" in response:
+                return np.array(response["prediction"]), response["value"]
+            else:
+                raise ValueError("Unexpected response format from the server.")
+
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to decode JSON response: {e}")
+        except ConnectionError as e:
+            logging.error(f"Connection error: {e}")
+            raise
+        except ValueError as e:
+            logging.error(f"Value error: {e}")
+            raise
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            raise
+        
+    def close(self):
+        if self.socket_to_server:
+            self.socket_to_server.close()
+            
 
 
 

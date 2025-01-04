@@ -10,6 +10,7 @@ import pygame
 from pygame.locals import *
 
 import chess
+import math
 
 from pygame.surface import Surface
 
@@ -129,6 +130,17 @@ class Board:
         position = tuple(self.square_size*x for x in square)
         piece.setPosition(position)
         return piece
+    
+    def createArrow(self, initial_square: int, end_square: int, color=(255, 0, 0), width=5):
+        """
+        Draws an arrow from the initial_square to the end_square.
+        """
+        # Convert squares to pixel positions
+        initial_pos = tuple(self.square_size * x for x in initial_square)
+        end_pos = tuple(self.square_size * x for x in end_square)
+
+        # Draw the main line
+        pygame.draw.line(self.DISPLAYSURF, color, initial_pos, end_pos, width)
 
     def updatePieces(self):
         # get pieces from fen

@@ -22,7 +22,7 @@ import logging
 
 
 class MCTS:
-    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False):
+    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False, pbar_i=None):
         """
         An object of the MCTS class represents a tree that can be built using 
         the Monte Carlo Tree Search algorithm. The tree contists of nodes and edges.
@@ -31,6 +31,7 @@ class MCTS:
         Hundreds of simulations are run to build the tree.
         """
         self.root = Node(state=state)
+        self.pbar_i = pbar_i
 
         self.game_path: list[Edge] = []
         self.cur_board: chess.Board = None
@@ -38,14 +39,15 @@ class MCTS:
         self.agent = agent
         self.stochastic = stochastic
 
-    def run_simulations(self, n: int) -> None:
+    def run_simulations(self, n: int, step_num=None) -> None:
         """
         Run n simulations from the root node.
         1) select child
         2) expand and evaluate
         3) backpropagate
         """
-        for _ in tqdm(range(n)):
+        
+        for _ in tqdm(range(n), position=self.pbar_i, desc=f"Simulations {self.pbar_i}", leave=False, postfix={"Step":step_num}):
             self.game_path = []
 
             # traverse the tree by selecting edges with max Q+U

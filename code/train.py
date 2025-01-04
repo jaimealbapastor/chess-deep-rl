@@ -96,13 +96,19 @@ class Trainer:
         plt.plot(value_loss, label='value_head_loss')
         plt.legend()
         plt.title(f"Loss over time\nLearning rate: {config.LEARNING_RATE}")
-        plt.savefig(f"{config.LOSS_PLOTS_FOLDER}/loss-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.png")
+        file_name = f"{config.LOSS_PLOTS_FOLDER}/loss-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.png"
+        plt.savefig(file_name)
+        return file_name
 
-    def save_model(self):
-        os.makedirs(config.MODEL_FOLDER, exist_ok=True)
-        path = f"{config.MODEL_FOLDER}/model-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.{config.MODEL_FORMAT}"
+    def save_model(self, name="model", it=None,folder=config.MODEL_FOLDER) -> str:
+        os.makedirs(folder, exist_ok=True)
+        if it is None:
+            path = f"{folder}/{name}-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.{config.MODEL_FORMAT}"
+        else:
+            path = f"{folder}/{name}-{it:02d}.{config.MODEL_FORMAT}"
         save_model(self.model, path)
         print(f"Model trained. Saved model to {path}")
+        return path
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ from game import Game
 from agent import Agent
 import argparse
 import logging
+
 logging.basicConfig(level=logging.INFO, format=" %(message)s")
 logging.disable(logging.WARN)
 

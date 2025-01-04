@@ -7,8 +7,7 @@ import numpy as np
 import time
 import logging
 
-logging.basicConfig(level=logging.INFO, format=' %(message)s')
-
+logging.basicConfig(level=logging.WARNING, format=' %(message)s')
 
 class ChessEnv:
     def __init__(self, fen: str = chess.STARTING_FEN):

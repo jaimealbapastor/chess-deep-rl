@@ -109,6 +109,8 @@ class GUI:
 
     def draw(self):
         self.gameboard.displayBoard()
+        if not (self.from_square is None or self.to_square is None):
+            self.gameboard.createArrow(self.from_square, self.to_square)
         self.gameboard.updatePieces()
 
         if self.promoting:

@@ -9,3 +9,4 @@ puzzles/[^.]*
 progress.md
 full_games.txt
 savedmodel/
+programs/**/tset*
