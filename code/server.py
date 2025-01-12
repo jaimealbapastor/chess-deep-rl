@@ -9,6 +9,7 @@ import config
 import numpy as np
 import threading
 import utils
+import argparse
 
 # from dotenv import load_dotenv
 # load_dotenv()
@@ -21,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG, format=' %(message)s')
 
 # Thread-safe model reference
 model_lock = threading.Lock()
-model = load_model(config.MODEL_FOLDER + "/brice-00.keras")
+model = None
 
 def set_model(model_path):
     """
@@ -193,7 +194,17 @@ class ClientHandler(threading.Thread):
 	
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Run server for model')
+	parser.add_argument('--model', type=str)
+	parser.add_argument('--host', type=str, default=config.SOCKET_HOST)
+	parser.add_argument("--port", type=int, default=5000)
+	args = parser.parse_args()
+	args = vars(args)
+	
+	# model = load_model(config.MODEL_FOLDER + "/brice-05.keras")
+	model = load_model(args["model"])
+ 
 	# create the server socket and start the server
-	server = ServerSocket(os.environ.get("SOCKET_HOST", "0.0.0.0"), int(os.environ.get("SOCKET_PORT", 5000)))
+	server = ServerSocket(args["host"], args["port"])
 	server.start()
 	

@@ -10,3 +10,5 @@ progress.md
 full_games.txt
 savedmodel/
 programs/**/tset*
+
+activate.bash

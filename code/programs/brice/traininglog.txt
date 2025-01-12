@@ -9,3 +9,48 @@ INFO: Saving new model './models/brice-00-2025-01-04_19:56:35.keras'
 
 INFO: Model 'models/brice-00.keras' chosen
 INFO: Creating training set 01 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/brice/tset-01
+INFO: 2980 white wins, 1005 black wins, 2010 draws
+INFO: Training with 5995 positions
+INFO: Exported loss plot to: ./plots/loss-2025-01-05_09:50:53.png
+INFO: Saving new model './models/brice-01.keras'
+
+INFO: Model 'models/brice-01.keras' chosen
+INFO: Creating training set 02 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/brice/tset-02
+INFO: 2670 white wins, 1666 black wins, 2010 draws
+INFO: Training with 6346 positions
+INFO: Exported loss plot to: ./plots/loss-2025-01-07_03:49:14.png
+INFO: Saving new model './models/brice-02.keras'
+
+INFO: Starting training
+INFO: Model 'models/brice-02.keras' chosen
+INFO: Creating training set 03 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/brice/tset-03
+INFO: 2585 white wins, 1780 black wins, 2010 draws
+INFO: Training with 6375 positions
+INFO: Exported loss plot to: ./plots/loss-2025-01-07_22:30:27.png
+INFO: Saving new model './models/brice-03.keras'
+
+INFO: Starting training
+INFO: Model 'models/brice-03.keras' chosen
+INFO: Creating training set 04 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/brice/tset-04
+INFO: 2260 white wins, 2062 black wins, 2211 draws
+INFO: Training with 6533 positions
+INFO: Exported loss plot to: ./plots/loss-2025-01-08_05:43:57.png
+INFO: Saving new model './models/brice-04.keras'
+
+INFO: Starting training
+INFO: Model 'models/brice-04.keras' chosen
+INFO: Creating training set 05 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/brice/tset-05
+INFO: 2724 white wins, 1608 black wins, 2548 draws
+INFO: Training with 6880 positions
+INFO: Exported loss plot to: ./plots/loss-2025-01-09_00:37:59.png
+INFO: Saving new model './models/brice-05.keras'

@@ -10,6 +10,7 @@ from tqdm import tqdm
 import utils
 import threading
 # import tensorflow as tf
+import os.path
 
 # graphing mcts
 from graphviz import Digraph
@@ -22,7 +23,7 @@ import logging
 
 
 class MCTS:
-    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False, pbar_i=None):
+    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False, experimental=False, pbar_i=None):
         """
         An object of the MCTS class represents a tree that can be built using 
         the Monte Carlo Tree Search algorithm. The tree contists of nodes and edges.
@@ -38,6 +39,7 @@ class MCTS:
 
         self.agent = agent
         self.stochastic = stochastic
+        self.experimental = experimental
 
     def run_simulations(self, n: int, step_num=None) -> None:
         """
@@ -46,8 +48,9 @@ class MCTS:
         2) expand and evaluate
         3) backpropagate
         """
-        
-        for _ in tqdm(range(n), position=self.pbar_i, desc=f"Simulations {self.pbar_i}", leave=False, postfix={"Step":step_num}):
+        agent_name, ext = os.path.splitext(os.path.basename(self.agent.model_path))
+        agent_name += "|" + str(self.pbar_i)
+        for _ in tqdm(range(n), desc=agent_name, position=self.pbar_i,leave=False, postfix={"Step":step_num}):
             self.game_path = []
 
             # traverse the tree by selecting edges with max Q+U
@@ -59,7 +62,8 @@ class MCTS:
             leaf = self.expand(leaf)
 
             # backpropagate the result
-            leaf = self.backpropagate(leaf, leaf.value)
+            if not self.experimental:
+                leaf = self.backpropagate(leaf, leaf.value)
 
     def select_child(self, node: Node) -> Node:
         """
@@ -74,8 +78,10 @@ class MCTS:
                 # if the node is terminal, return the node
                 return node
             noise = [1 for _ in range(len(node.edges))]
+            
             if self.stochastic and node == self.root:
                 noise = np.random.dirichlet([config.DIRICHLET_NOISE]*len(node.edges))
+                
             best_edge = None
             best_score = -np.inf                
             for i, edge in enumerate(node.edges):
@@ -208,7 +214,7 @@ class MCTS:
         # p = array of probabilities: [0, 1] for every move (including invalid moves)
         # v = [-1, 1]
         input_state = ChessEnv.state_to_input(leaf.state)
-        p, v = self.agent.predict(input_state)
+        p, v = self.agent.predict(input_state) # outpout of neural network
 
         # map probabilities to moves, this also filters out invalid moves
         # returns a dictionary of moves and their probabilities
@@ -217,8 +223,16 @@ class MCTS:
 
         logging.debug(f"Model predictions: {p}")
         logging.debug(f"Value of state: {v}")
-
+        
         leaf.value = v
+        
+        # TODO  add experimental learning feedback to value
+        if self.experimental:
+            if board.outcome():
+                pass
+            elif leaf.parent_edge is not None:
+                exp_learning_v = 0
+                leaf.value += exp_learning_v
 
         # create a child node for every action
         for action in possible_actions:

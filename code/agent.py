@@ -18,8 +18,8 @@ import os
 # load_dotenv()
 
 class Agent:
-    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN, pbar_i = None):
-        """
+    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN, host=config.SOCKET_HOST, port=5000):
+        """h
         An agent is an object that can play chessmoves on the environment.
         Based on the parameters, it can play with a local model, or send its input to a server.
         It holds an MCTS object that is used to run MCTS simulations to build a tree.
@@ -40,15 +40,15 @@ class Agent:
             try: 
                 self.socket_to_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket_to_server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                server = os.environ.get("SOCKET_HOST", "localhost")
-                port = int(os.environ.get("SOCKET_PORT", 5000))
-                self.socket_to_server.connect((server, port))
+                self.server_host = host
+                self.server_port = port
+                self.socket_to_server.connect((host, port))
             except Exception as e:
-                print(f"Agent could not connect to the server at {server}:{port}: ", e)
+                print(f"Agent could not connect to the server at {host}:{port}: ", e)
                 exit(1)
-            logging.info(f"Agent connected to server {server}:{port}")
+            logging.info(f"Agent connected to server {host}:{port}")
 
-        self.mcts = MCTS(self, state=state, pbar_i=pbar_i)
+        self.mcts = MCTS(self, state=state)
         
 
     def build_model(self) -> Model:

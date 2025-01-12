@@ -96,8 +96,8 @@ if __name__ == "__main__":
         # wait until server is ready
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        server = os.environ.get("SOCKET_HOST", "localhost")
-        port = int(os.environ.get("SOCKET_PORT", 5000))
+        server = config.SOCKET_HOST
+        port = 5000
 
         print("Checking if server is ready...")
         while s.connect_ex((server, port)) != 0:
