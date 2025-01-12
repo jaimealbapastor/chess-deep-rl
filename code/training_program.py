@@ -171,6 +171,7 @@ if __name__ == "__main__":
                     # filename=LOG_FILE,
                     # filemode='a',
                     # format='%(asctime)s %(levelname)s %(message)s')
+    add_file_log("\ninfo", "Starting training")
     
     models = [args["model"]]
     add_file_log("info", f"Model '{models[-1]}' chosen")
@@ -226,7 +227,7 @@ if __name__ == "__main__":
     models.append(new_model)
     logging.info(f"Saving new model '{new_model}'")
     add_file_log("info", f"Saving new model '{new_model}'")
-    add_file_log("", "")
+    
     # this doesn't work, have to do it manually
     # change_model_server(models[-1])
 

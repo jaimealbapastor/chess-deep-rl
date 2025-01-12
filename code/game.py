@@ -22,6 +22,7 @@ class Game:
         self.white = white
         self.black = black
 
+        self.chessgame = None
         self.memory = []
         self.memory_folder = config.MEMORY_DIR
         
@@ -61,7 +62,7 @@ class Game:
             # logging.info(f"\n{self.env.board}")
             # logging.info(f"Value according to white: {self.white.mcts.root.value}")
             # logging.info(f"Value according to black: {self.black.mcts.root.value}")
-            if config.SELFPLAY_SHOW_BOARD:
+            if config.SELFPLAY_SHOW_BOARD and hasattr(self, 'GUI'):
                 self.GUI.gameboard.board.set_fen(self.env.board.fen()) 
                 self.GUI.draw()
 
@@ -81,15 +82,20 @@ class Game:
         for index, element in enumerate(self.memory):
             self.memory[index] = (element[0], element[1], winner)
 
-        game = ChessGame()
+        self.chessgame = ChessGame()
+        self.chessgame.headers["Event"] = "Evaluation"
+        self.chessgame.headers["White"] = self.white.model_path
+        self.chessgame.headers["Black"] = self.black.model_path
+        
         # set starting position
-        game.setup(self.env.fen)
+        self.chessgame.setup(self.env.fen)
+    
         # add moves
-        node = game.add_variation(self.env.board.move_stack[0])
+        node = self.chessgame.add_variation(self.env.board.move_stack[0])
         for move in self.env.board.move_stack[1:]:
             node = node.add_variation(move)
         # print pgn
-        logging.info(game)
+        logging.info(self.chessgame)
 
         # save memory to file
         self.save_game(name="game", full_game=full_game)
@@ -97,7 +103,7 @@ class Game:
         return winner
     
 
-    def play_move(self, stochastic: bool = True, previous_moves: tuple[Edge, Edge] = (None, None), save_moves=True, counter = None) -> None:
+    def play_move(self, stochastic: bool = True, previous_moves: tuple[Edge, Edge] = (None, None), save_moves=True, counter = None) -> tuple:
         """
         Play one move. If stochastic is True, the move is chosen using a probability distribution.
         Otherwise, the move is chosen based on the highest N (deterministically).
@@ -181,7 +187,10 @@ class Game:
         logging.info(
             f"Game saved to {os.path.join(self.memory_folder, game_id)}.npy")
         logging.info(f"Memory size: {len(self.memory)}")
-
+        
+        if self.chessgame is not None:
+            with open(os.path.join(self.memory_folder, "pgn", game_id+".pgn"), 'w') as f:
+                f.write(self.chessgame.__str__() + "\n")
 
     @utils.time_function
     def train_puzzles(self, puzzles: pd.DataFrame):
@@ -211,7 +220,7 @@ class Game:
                 logging.info(f"Value according to black: {self.black.mcts.root.value}")
                 counter += 1
                 if counter > config.MAX_PUZZLE_MOVES:
-                    logging.warning(f"Puzzle {puzzle.puzzleid} could not be solved within the move limit")
+                    logging.warning(f"Puzzle could not be solved within the move limit")
                     break
             if not self.env.board.is_game_over():
                 continue

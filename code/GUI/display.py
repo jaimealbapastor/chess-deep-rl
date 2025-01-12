@@ -45,6 +45,8 @@ class GUI:
         # for moving pieces
         self.from_square = None
         self.to_square = None
+        self.previous_move = None
+        
         # for promotion
         self.promoting = False
 
@@ -109,8 +111,6 @@ class GUI:
 
     def draw(self):
         self.gameboard.displayBoard()
-        if not (self.from_square is None or self.to_square is None):
-            self.gameboard.createArrow(self.from_square, self.to_square)
         self.gameboard.updatePieces()
 
         if self.promoting:
@@ -154,7 +154,9 @@ class GUI:
                         self.from_square = None
                         self.to_square = None
                         continue
-
+                    
+                    self.previous_move = (self.from_square, self.to_square)
+                    
                     to_square = Board.square_to_string(
                         Board.tuple_to_square(*self.to_square))
                     if piece.piece_type == chess.PAWN and ((piece.color == chess.WHITE and to_square[1] == '8') or (piece.color == chess.BLACK and to_square[1] == '1')):

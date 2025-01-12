@@ -136,8 +136,8 @@ class Board:
         Draws an arrow from the initial_square to the end_square.
         """
         # Convert squares to pixel positions
-        initial_pos = tuple(self.square_size * x for x in initial_square)
-        end_pos = tuple(self.square_size * x for x in end_square)
+        initial_pos = tuple(self.square_size * (x + 0.5) for x in initial_square)
+        end_pos = tuple(self.square_size * (x + 0.5) for x in end_square)
 
         # Draw the main line
         pygame.draw.line(self.DISPLAYSURF, color, initial_pos, end_pos, width)

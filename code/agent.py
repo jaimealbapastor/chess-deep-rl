@@ -24,6 +24,7 @@ class Agent:
         Based on the parameters, it can play with a local model, or send its input to a server.
         It holds an MCTS object that is used to run MCTS simulations to build a tree.
         """
+        self.model_path = model_path
         if local_predictions and model_path is not None:
             logging.info("Using local predictions")
             from tensorflow.python.ops.numpy_ops import np_config
