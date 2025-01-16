@@ -8,6 +8,7 @@ from tqdm import tqdm
 import socket
 import time
 import os
+import argparse
 
 class Evaluation:
     def __init__(self, model_1_path: str, model_2_path: str, local_predictions = False):
@@ -30,8 +31,13 @@ class Evaluation:
             # play deterministally
             game = Game(ChessEnv(), agent_1, agent_2, pbar_i=pbar_i)
             game.set_mem_folder(self.mem_folder)
+            if config.SELFPLAY_SHOW_BOARD:
+                gui = GUI(400, 400, game.env.board.turn)
+                game.GUI = gui
+                game.GUI.gameboard.board.set_fen(game.env.board.fen())
+                game.GUI.draw()
 
-            outcome = game.play_one_game(stochastic=False)
+            outcome = game.play_one_game(stochastic=True)
             progress["finished"] += 1
             
             if outcome == 0:
@@ -44,8 +50,13 @@ class Evaluation:
             # turn around the colors
             game = Game(ChessEnv(), agent_2, agent_1, pbar_i=pbar_i)
             game.set_mem_folder(self.mem_folder)
+            if config.SELFPLAY_SHOW_BOARD:
+                gui = GUI(400, 400, game.env.board.turn)
+                game.GUI = gui
+                game.GUI.gameboard.board.set_fen(game.env.board.fen())
+                game.GUI.draw()
 
-            outcome = game.play_one_game(stochastic=False)
+            outcome = game.play_one_game(stochastic=True)
             progress["finished"] += 1
             
             if outcome == 0:
@@ -68,15 +79,15 @@ class Evaluation:
         
         
         with mp.Manager() as manager:
-            pbar_main = tqdm(total=n, desc="Total games played")
+            pbar_main = tqdm(total=n, position=0, desc="Total games played")
             shared_progress = manager.dict({"model1":0, "model2": 0, "draws":0, "started":0, "finished":0})
             
             with mp.Pool(processes=p_count) as pool:
                 result = pool.starmap_async(self.evaluate_games, [(shared_progress, n, i+1) for i in range(p_count)])
 
-                fin = shared_progress["finished"]
+                fin = shared_progress.get("finished")
                 while fin < n:
-                    pbar_main.n = fin
+                    pbar_main.n = int(fin)
                     pbar_main.update()
                     
                     try:
@@ -84,8 +95,6 @@ class Evaluation:
                         break
                     except mp.TimeoutError:
                         pass
-                        
-                
             
             return (
                 f"Evaluated these models: Model 1 = {self.model_1}, Model 2 = {self.model_2}\n"
@@ -95,8 +104,6 @@ class Evaluation:
 
 if __name__ == "__main__":
     # get args
-    import argparse
-
     parser = argparse.ArgumentParser(description="Evaluate two models")
     parser.add_argument("model_1", help="Path to model 1", type=str)
     parser.add_argument("model_2", help="Path to model 2", type=str)
