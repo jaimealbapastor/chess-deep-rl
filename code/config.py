@@ -44,7 +44,7 @@ OUTPUT_SHAPE = (8*8*amount_of_planes, 1)
 
 # ============= NEURAL NETWORK PARAMETERS =============
 # change if necessary. AZ started with 0.2 and then dropped three times to 0.02, 0.002 and 0.0002
-LEARNING_RATE = 00.2
+LEARNING_RATE = 0.02
 # filters for the convolutional layers (AZ: 256)
 CONVOLUTION_FILTERS = 256
 # amount of hidden residual layers

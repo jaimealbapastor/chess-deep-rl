@@ -4,7 +4,7 @@ from edge import Edge
 
 
 class Node:
-    def __init__(self, state: str):
+    def __init__(self, state: str, parent_edge:Edge = None, value=0):
         """
         A node is a state inside the MCTS tree.
         """
@@ -15,7 +15,10 @@ class Node:
         # the visit count for this node
         self.N = 0
 
-        self.value = 0
+        self.value = value
+        
+        # Experimental learning feedback
+        self.parent_edge = parent_edge
 
     def __eq__(self, node: object) -> bool:
         """
@@ -56,8 +59,12 @@ class Node:
 
         Returns the created edge between the nodes
         """
+        
         edge = Edge(input_node=self, output_node=child, action=action, prior=prior)
+        edge.output_node.parent_edge = edge
+        
         self.edges.append(edge)
+        
         return edge
 
     def get_all_children(self):
@@ -70,7 +77,7 @@ class Node:
             children.extend(edge.output_node.get_all_children())
         return children
 
-    def get_edge(self, action) -> Edge:
+    def get_edge(self, action:Move) -> Edge:
         """
         Get the edge between the current node and the child node with the given action.
         """

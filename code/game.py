@@ -7,14 +7,14 @@ import logging
 import config
 from chess.pgn import Game as ChessGame
 from edge import Edge
-from mcts import MCTS
+from mcts import MCTS, ExperimentalMCTS
 import uuid
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
 class Game:
-    def __init__(self, env: ChessEnv, white: Agent, black: Agent, pbar_i=None):
+    def __init__(self, env: ChessEnv, white: Agent, black: Agent, pbar_i=None, experimental=False):
         """
         The Game class is used to play chess games between two agents.
         """
@@ -27,6 +27,7 @@ class Game:
         self.memory_folder = config.MEMORY_DIR
         
         self.pbar_i = pbar_i
+        self.experimental = experimental
         
         self.reset()
 
@@ -115,33 +116,62 @@ class Game:
 
         if previous_moves[0] is None or previous_moves[1] is None:
             # create new tree with root node == current board
-            current_player.mcts = MCTS(current_player, state=self.env.board.fen(), stochastic=stochastic, pbar_i = self.pbar_i)
+            if not self.experimental:
+                current_player.mcts = MCTS(current_player, state=self.env.board.fen(), stochastic=stochastic, pbar_i = self.pbar_i)
+            else:
+                current_player.mcts = ExperimentalMCTS(current_player, state=self.env.board.fen(), stochastic=stochastic, pbar_i=self.pbar_i)
         else:
             # change the root node to the node after playing the two previous moves
             try:
                 node = current_player.mcts.root.get_edge(previous_moves[0].action).output_node
-                node = node.get_edge(previous_moves[1].action).output_node
+                node = node.get_edge(previous_moves[1].action).output_node 
                 current_player.mcts.root = node
-            except AttributeError:
-                logging.warning("WARN: Node does not exist in tree, continuing with new tree...")
-                current_player.mcts = MCTS(current_player, state=self.env.board.fen(), stochastic=stochastic)
+            except AttributeError as e:
+                # logging.warning("WARN: Node does not exist in tree, continuing with new tree...")
+                if not self.experimental:
+                    current_player.mcts = MCTS(current_player, state=self.env.board.fen(), stochastic=stochastic, pbar_i = self.pbar_i)
+                else:
+                    current_player.mcts = ExperimentalMCTS(current_player, state=self.env.board.fen(), stochastic=stochastic, pbar_i=self.pbar_i)
+        
         # play n simulations from the root node
         current_player.run_simulations(n=config.SIMULATIONS_PER_MOVE, step_num = counter)
-
+        
         moves = current_player.mcts.root.edges
-
         if save_moves:
             self.save_to_memory(self.env.board.fen(), moves)
+            
+        zero_division = False
+        best_move = None
+                
+        if self.experimental:
+            t = 1 if self.turn else -1  # min max
+            values = [t * e.W for e in moves]
+            
+            if stochastic:
+                min_v = min(values)
+                values = [v - min_v for v in values] # make all positive
+                total = sum(values)
+                if total != 0: 
+                    prob_values = [v/total for v in values]
+                    best_move = np.random.choice(moves, p=prob_values)
+                else:
+                    zero_division = True
+                    
+            if zero_division or not stochastic:
+                t = 1 if self.turn else -1  # min max
+                values = [t * e.W for e in moves]
+                best_move = moves[np.argmax(values)]
 
-        sum_move_visits = sum(e.N for e in moves)
-        probs = [e.N / sum_move_visits for e in moves]
-        
-        if stochastic:
-            # choose a move based on a probability distribution
-            best_move = np.random.choice(moves, p=probs)
         else:
-            # choose a move based on the highest N
-            best_move = moves[np.argmax(probs)]
+            sum_move_visits = sum(e.N for e in moves)
+            probs = [e.N / sum_move_visits for e in moves]
+        
+            if stochastic:
+                # choose a move based on a probability distribution
+                best_move = np.random.choice(moves, p=probs)
+            else:
+                # choose a move based on the highest N
+                best_move = moves[np.argmax(probs)]
 
         # play the move
         logging.info(
@@ -159,12 +189,19 @@ class Game:
         """
         Append the current state and move probabilities to the internal memory.
         """
-        sum_move_visits = sum(e.N for e in moves)
-        # create dictionary of moves and their probabilities
-        search_probabilities = {
-            e.action.uci(): e.N / sum_move_visits for e in moves}
+        if not self.experimental:
+            sum_move_visits = sum(e.N for e in moves)
+            # create dictionary of moves and their probabilities
+            search_probabilities = {
+                e.action.uci(): e.N / sum_move_visits for e in moves}
+            
+        else:
+            sum_move_values = sum(e.W for e in moves)
+            search_probabilities = {
+                e.action.uci(): e.W / sum_move_values for e in moves}
+        
         # winner gets added after game is over
-        self.memory.append((state, search_probabilities, None))
+            self.memory.append((state, search_probabilities, None))
         
     def set_mem_folder(self, memory_folder:str) -> None:
         self.memory_folder = memory_folder
@@ -189,7 +226,11 @@ class Game:
         logging.info(f"Memory size: {len(self.memory)}")
         
         if self.chessgame is not None:
-            with open(os.path.join(self.memory_folder, "pgn", game_id+".pgn"), 'w') as f:
+            pgn_folder = os.path.join(self.memory_folder, "pgn")
+            if not os.path.exists(pgn_folder):
+                os.makedirs(pgn_folder)
+                
+            with open(os.path.join(pgn_folder, game_id+".pgn"), 'w') as f:
                 f.write(self.chessgame.__str__() + "\n")
 
     @utils.time_function

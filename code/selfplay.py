@@ -22,7 +22,7 @@ from tqdm import tqdm
 # set logging config
 logging.basicConfig(level=logging.WARNING, format=' %(message)s')
 
-def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False, model_path=None, pbar_i=None) -> Game:
+def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False, model_path=None, pbar_i=None, experimental=False) -> Game:
     """
     Setup function to set up a game. 
     This can be used in both the self-play and puzzle solving function
@@ -40,10 +40,10 @@ def setup(starting_position: str = chess.STARTING_FEN, local_predictions=False, 
     env = ChessEnv(fen=starting_position)
 
     # create agents
-    white = Agent(local_predictions, model_path, env.board.fen(), pbar_i=pbar_i)
-    black = Agent(local_predictions, model_path, env.board.fen(), pbar_i=pbar_i)
+    white = Agent(local_predictions, model_path=model_path, state=env.board.fen())
+    black = Agent(local_predictions, model_path=model_path, state=env.board.fen())
 
-    return Game(env=env, white=white, black=black, pbar_i=pbar_i)
+    return Game(env=env, white=white, black=black, pbar_i=pbar_i, experimental=experimental)
 
 def self_play(local_predictions=False):
     """

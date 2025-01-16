@@ -1,6 +1,5 @@
 # implement the Monte Carlo Tree Search algorithm
 import chess
-import chess.pgn
 from chessEnv import ChessEnv
 from node import Node
 from edge import Edge
@@ -11,6 +10,7 @@ import utils
 import threading
 # import tensorflow as tf
 import os.path
+import random
 
 # graphing mcts
 from graphviz import Digraph
@@ -23,7 +23,7 @@ import logging
 
 
 class MCTS:
-    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False, experimental=False, pbar_i=None):
+    def __init__(self, agent: "Agent", state: str = chess.STARTING_FEN, stochastic=False, pbar_i=None):
         """
         An object of the MCTS class represents a tree that can be built using 
         the Monte Carlo Tree Search algorithm. The tree contists of nodes and edges.
@@ -39,7 +39,7 @@ class MCTS:
 
         self.agent = agent
         self.stochastic = stochastic
-        self.experimental = experimental
+        
 
     def run_simulations(self, n: int, step_num=None) -> None:
         """
@@ -48,8 +48,12 @@ class MCTS:
         2) expand and evaluate
         3) backpropagate
         """
-        agent_name, ext = os.path.splitext(os.path.basename(self.agent.model_path))
-        agent_name += "|" + str(self.pbar_i)
+        
+        agent_name = "Agent"
+        if self.agent.model_path:
+            agent_name, ext = os.path.splitext(os.path.basename(self.agent.model_path))
+            agent_name += "|" + str(self.pbar_i)
+        
         for _ in tqdm(range(n), desc=agent_name, position=self.pbar_i,leave=False, postfix={"Step":step_num}):
             self.game_path = []
 
@@ -62,8 +66,7 @@ class MCTS:
             leaf = self.expand(leaf)
 
             # backpropagate the result
-            if not self.experimental:
-                leaf = self.backpropagate(leaf, leaf.value)
+            leaf = self.backpropagate(leaf, leaf.value)
 
     def select_child(self, node: Node) -> Node:
         """
@@ -77,13 +80,14 @@ class MCTS:
             if not len(node.edges):
                 # if the node is terminal, return the node
                 return node
+             
+            best_edge = None
+            best_score = -np.inf   
+              
             noise = [1 for _ in range(len(node.edges))]
-            
             if self.stochastic and node == self.root:
                 noise = np.random.dirichlet([config.DIRICHLET_NOISE]*len(node.edges))
                 
-            best_edge = None
-            best_score = -np.inf                
             for i, edge in enumerate(node.edges):
                 if edge.upper_confidence_bound(noise[i]) > best_score:
                     best_score = edge.upper_confidence_bound(noise[i])
@@ -223,16 +227,6 @@ class MCTS:
 
         logging.debug(f"Model predictions: {p}")
         logging.debug(f"Value of state: {v}")
-        
-        leaf.value = v
-        
-        # TODO  add experimental learning feedback to value
-        if self.experimental:
-            if board.outcome():
-                pass
-            elif leaf.parent_edge is not None:
-                exp_learning_v = 0
-                leaf.value += exp_learning_v
 
         # create a child node for every action
         for action in possible_actions:
@@ -240,6 +234,8 @@ class MCTS:
             new_state = leaf.step(action)
             # add a new child node with the new board, the action taken and its prior probability
             leaf.add_child(Node(new_state), action, actions[action.uci()])
+          
+        
         return leaf
 
     def backpropagate(self, end_node: Node, value: float) -> Node:
@@ -248,11 +244,13 @@ class MCTS:
         in the traversed path from the given leaf node up to the root node.
         """
         logging.debug("Backpropagation...")
-
-        for edge in self.game_path:
+        gamma = 0.9 # Discount factor for future rewards
+        
+        for edge in reversed(self.game_path):
             edge.input_node.N += 1
             edge.N += 1
             edge.W += value
+            
         return end_node
 
     def plot_node(self, dot: Digraph, node: Node):
@@ -278,3 +276,165 @@ class MCTS:
         # recursively plot the tree
         dot = self.plot_node(dot, self.root)
         dot.save(save_path)
+
+class ExperimentalMCTS(MCTS):
+    def __init__(self, agent, state = chess.STARTING_FEN, stochastic=False, pbar_i=None):
+        super().__init__(agent, state, stochastic, pbar_i)
+        
+    def run_simulations(self, n: int, step_num=None) -> None:
+        """
+        Run n simulations from the root node.
+        1) select child
+        2) expand and evaluate
+        """
+        
+        agent_name = "Exp. Agent"
+        if self.agent.model_path:
+            agent_name, ext = os.path.splitext(os.path.basename(self.agent.model_path))
+            agent_name = "Exp " + agent_name + "|" + str(self.pbar_i)
+        
+        for _ in tqdm(range(n), desc=agent_name, position=self.pbar_i,leave=False, postfix={"Step":step_num}):
+            self.game_path = []
+
+            # traverse the tree by selecting edges with max Q+U
+            # leaf is root on first iteration
+            leaf = self.select_child(self.root)
+
+            # expand the leaf node
+            leaf.N += 1
+            leaf = self.expand(leaf)
+
+            # backpropagate the result
+            # leaf = self.backpropagate(leaf, leaf.value)
+        
+    def select_child(self, node: Node) -> Node:
+        """
+        Traverse the three from the given node, by selecting actions with the maximum Q+U.
+
+        If the node has not been visited yet, return the node. That is the new leaf node.
+        If this is the first simulation, the leaf node is the root node.
+        """
+        # traverse the tree by selecting nodes until a leaf node is reached
+        while not node.is_leaf():
+            if not len(node.edges):
+                # if the node is terminal, return the node
+                return node
+             
+            best_edge = None
+            best_score = -np.inf   
+            
+            for edge in node.edges:
+                if self.stochastic:
+                    noise = (random.random() - 0.5) / 10
+                else:
+                    noise = 0
+                score = edge.fast_ucb(noise)
+                if score > best_score:
+                    best_score = score
+                    best_edge = edge
+
+            if best_edge is None:
+                # this should never happen
+                raise Exception("No edge found")
+        
+            # get that actions's new node
+            node = best_edge.output_node
+            self.game_path.append(best_edge)
+        return node
+    
+    def expand(self, leaf: Node) -> Node:
+        """
+        Expand the leaf node by adding all possible moves to the leaf node.
+        This will generate new edges and nodes.
+        Return the leaf node
+        """
+        logging.debug("Expanding...")
+
+        board = chess.Board(leaf.state)
+
+        # get all possible moves
+        possible_actions = list(board.generate_legal_moves())
+
+        if not len(possible_actions):
+            assert board.is_game_over(), "Game is not over, but there are no possible moves?"
+            outcome = board.outcome(claim_draw=True)
+            if outcome is None:
+                leaf.value = 0
+            else:
+                leaf.value = 1 if outcome.winner == chess.WHITE else -1
+            # print(f"Leaf's game ended with {leaf.value}")
+            return leaf
+
+        # predict p and v
+        # p = array of probabilities: [0, 1] for every move (including invalid moves)
+        # v = [-1, 1]
+        input_state = ChessEnv.state_to_input(leaf.state)
+        p, v = self.agent.predict(input_state) # outpout of neural network
+
+        # map probabilities to moves, this also filters out invalid moves
+        # returns a dictionary of moves and their probabilities
+        # p, v = p[0], v[0][0]
+        actions = self.probabilities_to_actions(p, leaf.state)
+        
+        # print(f"Model predictions: {p}")
+        # print(f"Value of state: {v}")
+        
+        alpha = 0.2
+        gamma = 0.8
+
+        # create a child node for every action
+        for action in possible_actions:
+            # make the move and get the new board
+            new_state = leaf.step(action)
+            # add a new child node with the new board, the action taken and its prior probability
+            child = Node(new_state)
+            edge = Edge(input_node=leaf, output_node=child, action=action, prior=actions[action.uci()])
+            edge.output_node.parent_edge = edge
+            
+            # Bellman's equation for Q
+            # Initialization of Q value for edge
+            edge.W = alpha * actions[action.uci()]
+            if not leaf.turn:
+                edge.W = -edge.W
+            
+            leaf.edges.append(edge)
+                
+        if leaf.parent_edge is not None:
+            reward = leaf.parent_edge.reward()
+            maxQplus1 = actions[max(actions, key=actions.get)]
+            
+            # value for parent edge, if leaf is white, parent is black
+            if leaf.turn:
+                maxQplus1 = -maxQplus1
+    
+            # Update 
+            leaf.parent_edge.W += alpha * (reward + gamma * maxQplus1 - leaf.parent_edge.W)
+            leaf.parent_edge.W = round(leaf.parent_edge.W, 3)
+            leaf.parent_edge.W = max(-1, min(leaf.parent_edge.W, 1))
+        
+        return leaf
+    
+    def backpropagate(self, end_node: Node, value: float) -> Node:
+        """
+        The backpropagation step will update the values of the nodes 
+        in the traversed path from the given leaf node up to the root node.
+        """
+        return end_node
+    
+        logging.debug("Backpropagation...")
+        gamma = 0.9 # Discount factor for future rewards
+        
+        for edge in reversed(self.game_path):
+            edge.input_node.N += 1
+            edge.N += 1
+            
+            scaling_factor = 1 / (1 + edge.N)
+            if edge.input_node.turn == chess.BLACK:
+                scaling_factor *= -1
+            edge.W += scaling_factor * value
+            edge.W = round(edge.W, 5)
+            
+            value *= gamma
+            
+            
+        return end_node

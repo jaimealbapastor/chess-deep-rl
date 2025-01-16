@@ -18,7 +18,6 @@ from GUI.display import GUI
 from train import Trainer
 
 LOCAL_PREDICTIONS = False
-MODEL_PATH = "models/untrained.keras"
 
 PROGRAMS_FOLDER = "programs"
 
@@ -48,21 +47,24 @@ class SharedCounter:
 game_counter = None
 
 @utils.time_function
-def self_play_for(number_of_games, mem_folder, p_count = 8):
+def self_play_for(number_of_games, mem_folder, p_count = 8, experimental=False):
     
     global game_counter 
     game_counter = SharedCounter(number_of_games)
     
+    if number_of_games < p_count:
+        p_count=number_of_games
+    
     with mp.Pool(processes=p_count) as pool:
-        pool.starmap(self_play_count, [(i+1, mem_folder) for i in range(p_count)])
+        pool.starmap(self_play_count, [(i+1, mem_folder, experimental) for i in range(p_count)])
 
-def self_play_count(index, mem_folder):
+def self_play_count(index, mem_folder, experimental=False):
     """
     Continuously play games against itself until the limit is reached
     """
     global game_counter
     
-    game = setup(local_predictions=LOCAL_PREDICTIONS,pbar_i=index)
+    game = setup(local_predictions=LOCAL_PREDICTIONS,model_path=args["model"], pbar_i=index, experimental=experimental)
     game.set_mem_folder(mem_folder)
 
     if config.SELFPLAY_SHOW_BOARD:
@@ -83,11 +85,11 @@ def self_play_count(index, mem_folder):
     game.black.close()
         
             
-def puzzle_solver(puzzles, number_of_puzzles, memory_folder):
+def puzzle_solver(puzzles, number_of_puzzles, memory_folder, experimental=False):
     """
     Continuously solve puzzles until the limit is reached
     """
-    game = setup(local_predictions=LOCAL_PREDICTIONS, model_path=MODEL_PATH, pbar_i=1)
+    game = setup(local_predictions=LOCAL_PREDICTIONS, model_path=args["model"], pbar_i=1, experimental=experimental)
     game.set_mem_folder(memory_folder)
     
     # shuffle pandas rows
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, help="The model to train")
     parser.add_argument("--name", type=str, help="The name of the output trained model")
     parser.add_argument("--puzzle-file", default=None, type=str, help="File to load puzzles from (csv)")
+    parser.add_argument("--experimental", action="store_true")
     args = parser.parse_args()
     args = vars(args)
     
@@ -176,8 +179,8 @@ if __name__ == "__main__":
     
     logging.debug("Checking preexisting training sets")
     i = 0
-    while os.path.exists(os.path.join(model_folder, f"tset-{i:02d}")):
-        i+=1
+    # while os.path.exists(os.path.join(model_folder, f"tset-{i:02d}")):
+    #     i+=1
     
     # creating training set
     tset_folder = os.path.join(model_folder, f"tset-{i:02d}")
@@ -186,13 +189,13 @@ if __name__ == "__main__":
     
     logging.info(f"Creating training set {i}")
     add_file_log("info", f"Creating training set {i:02d} with {config.BATCH_SIZE} games")
-    self_play_for(config.BATCH_SIZE, tset_folder)
+    # self_play_for(config.BATCH_SIZE, tset_folder, experimental=args["experimental"])
     
     if args["puzzle_file"] is not None:
         n_puzzles = 10
         add_file_log("info", f"Creating puzzle set ({n_puzzles} puzzles)")
-        puzzles = Game.create_puzzle_set(filename=args['puzzle_file'])
-        puzzle_solver(puzzles, n_puzzles, tset_folder)
+        # puzzles = Game.create_puzzle_set(filename=args['puzzle_file'])
+        # puzzle_solver(puzzles, n_puzzles, tset_folder, experimental=args["experimental"])
         
     # training model
     model = load_model(models[-1])
@@ -217,14 +220,16 @@ if __name__ == "__main__":
     add_file_log("info", f"Training with {len(data)} positions")
     
     history = trainer.train_random_batches(data)
-    plot_file = trainer.plot_loss(history)
-    add_file_log("info", f"Exported loss plot to: {plot_file}")
     
     # save the new model
     new_model = trainer.save_model(f"{args['name']}", it=i)
     models.append(new_model)
     logging.info(f"Saving new model '{new_model}'")
     add_file_log("info", f"Saving new model '{new_model}'")
+    
+    # plot
+    plot_file = trainer.plot_loss(history)
+    add_file_log("info", f"Exported loss plot to: {plot_file}")
     
     # this doesn't work, have to do it manually
     # change_model_server(models[-1])

@@ -1,1 +1,4 @@
 [Deep Q-Learning](https://medium.com/@samina.amin/deep-q-learning-dqn-71c109586bae)
+
+
+ namex==0.0.8 libclang==18.1.1 flatbuffers==24.12.23 wrapt==1.17.0 typing_extensions==4.12.2 termcolor==2.5.0 tensorflow-io-gcs-filesystem==0.37.1 tensorboard-data-server==0.7.2 Pygments==2.18.0 protobuf==5.29.2 packaging==24.2 opt_einsum==3.4.0 numpy==2.0.2 mdurl==0.1.2 MarkupSafe==3.0.2 Markdown==3.7 grpcio==1.68.1 gast==0.6.0 absl-py==2.1.0 Werkzeug==3.1.3 optree==0.13.1 ml-dtypes==0.4.1 markdown-it-py==3.0.0 h5py==3.12.1 google-pasta==0.2.0 astunparse==1.6.3 tensorboard==2.18.0 rich==13.9.4 keras==3.7.0 tensorflow==2.18.0

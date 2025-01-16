@@ -7,18 +7,18 @@ import time
 # import tensorflow as tf
 import utils
 from tqdm import tqdm
-from mcts import MCTS
+from mcts import MCTS, ExperimentalMCTS
 # from tensorflow.keras.models import load_model
 import json
 import numpy as np
 import chess
 
-import os
 # from dotenv import load_dotenv
 # load_dotenv()
 
-class Agent:
-    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN, host=config.SOCKET_HOST, port=5000):
+
+class Agent():
+    def __init__(self, local_predictions: bool = False, model_path = None, state=chess.STARTING_FEN, host=config.SOCKET_HOST, port=5000, experimental=False):
         """h
         An agent is an object that can play chessmoves on the environment.
         Based on the parameters, it can play with a local model, or send its input to a server.
@@ -48,7 +48,10 @@ class Agent:
                 exit(1)
             logging.info(f"Agent connected to server {host}:{port}")
 
-        self.mcts = MCTS(self, state=state)
+        if experimental:
+            self.mcts = ExperimentalMCTS(self, state=state)
+        else:
+            self.mcts = MCTS(self, state=state)
         
 
     def build_model(self) -> Model:

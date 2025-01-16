@@ -17,7 +17,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-logging.basicConfig(level=logging.DEBUG, format=' %(message)s')
+logging.basicConfig(level=logging.INFO, format=' %(message)s')
 
 
 # Thread-safe model reference

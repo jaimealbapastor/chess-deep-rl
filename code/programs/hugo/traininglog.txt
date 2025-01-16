@@ -1,0 +1,41 @@
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-00
+INFO: 1808 white wins, 1296 black wins, 4422 draws
+INFO: Training with 7526 positions
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-00
+INFO: 1808 white wins, 1296 black wins, 4422 draws
+INFO: Training with 7526 positions
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Loading all games in programs/hugo/tset-00
+INFO: 1808 white wins, 1296 black wins, 4422 draws
+INFO: Training with 7526 positions
+
+INFO: Starting training
+INFO: Model 'models/untrained-0.02.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Loading all games in programs/hugo/tset-00
+INFO: 1808 white wins, 1296 black wins, 4422 draws
+INFO: Training with 7526 positions
+INFO: Saving new model './models/hugo-00.keras'
