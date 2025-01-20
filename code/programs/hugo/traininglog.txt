@@ -39,3 +39,57 @@ INFO: Loading all games in programs/hugo/tset-00
 INFO: 1808 white wins, 1296 black wins, 4422 draws
 INFO: Training with 7526 positions
 INFO: Saving new model './models/hugo-00.keras'
+
+INFO: Starting training
+INFO: Model 'models/hugo-00.keras' chosen
+INFO: Creating training set 00 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-00
+INFO: 1808 white wins, 1296 black wins, 4422 draws
+INFO: Training with 7526 positions
+
+INFO: Starting training
+INFO: Model 'models/hugo-00.keras' chosen
+INFO: Creating training set 01 with 32 games
+
+INFO: Starting training
+INFO: Model 'models/hugo-00.keras' chosen
+INFO: Creating training set 01 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-01
+INFO: 1054 white wins, 3328 black wins, 3206 draws
+INFO: Training with 7588 positions
+INFO: Saving new model './models/hugo-01.keras'
+
+INFO: Starting training
+INFO: Model 'models/hugo-01.keras' chosen
+INFO: Creating training set 02 with 32 games
+
+INFO: Starting training
+INFO: Model 'models/hugo-01.keras' chosen
+INFO: Creating training set 03 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-03
+INFO: 1839 white wins, 2297 black wins, 3417 draws
+INFO: Training with 7553 positions
+INFO: Saving new model './models/hugo-03.keras'
+
+INFO: Starting training
+INFO: Model 'models/hugo-03.keras' chosen
+INFO: Creating training set 04 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-04
+INFO: 1809 white wins, 2625 black wins, 3131 draws
+INFO: Training with 7565 positions
+INFO: Saving new model './models/hugo-04.keras'
+INFO: Exported loss plot to: ./plots/loss-2025-01-19_15:15:46.png
+
+INFO: Starting training
+INFO: Model 'models/hugo-04.keras' chosen
+INFO: Creating training set 05 with 32 games
+INFO: Creating puzzle set (10 puzzles)
+INFO: Loading all games in programs/hugo/tset-05
+INFO: 1766 white wins, 2110 black wins, 3618 draws
+INFO: Training with 7494 positions
+INFO: Saving new model './models/hugo-05.keras'
+INFO: Exported loss plot to: ./plots/loss-2025-01-20_06:54:45.png

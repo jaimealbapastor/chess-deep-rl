@@ -9,12 +9,16 @@ import config
 import tensorflow as tf
 from keras.models import Model
 from keras.models import load_model, save_model
+import matplotlib
 from matplotlib import pyplot as plt
 import pandas as pd
 import uuid
 import utils
 from tqdm import tqdm
 from datetime import datetime
+
+matplotlib.use('Agg')
+
 
 class Trainer:
     def __init__(self, model: Model):

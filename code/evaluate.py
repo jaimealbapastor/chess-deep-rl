@@ -122,7 +122,7 @@ if __name__ == "__main__":
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s1.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         server = config.SOCKET_HOST
-        port = 8000
+        port = 5000
 
         print("Checking if server is ready...")
         while s1.connect_ex((server, port)) != 0:
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         
         s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s2.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        port = 5000
+        port = 8000
 
         print("Checking if server is ready...")
         while s2.connect_ex((server, port)) != 0:

@@ -179,8 +179,8 @@ if __name__ == "__main__":
     
     logging.debug("Checking preexisting training sets")
     i = 0
-    # while os.path.exists(os.path.join(model_folder, f"tset-{i:02d}")):
-    #     i+=1
+    while os.path.exists(os.path.join(model_folder, f"tset-{i:02d}")):
+        i+=1
     
     # creating training set
     tset_folder = os.path.join(model_folder, f"tset-{i:02d}")
@@ -189,13 +189,13 @@ if __name__ == "__main__":
     
     logging.info(f"Creating training set {i}")
     add_file_log("info", f"Creating training set {i:02d} with {config.BATCH_SIZE} games")
-    # self_play_for(config.BATCH_SIZE, tset_folder, experimental=args["experimental"])
+    self_play_for(config.BATCH_SIZE, tset_folder, experimental=args["experimental"])
     
     if args["puzzle_file"] is not None:
         n_puzzles = 10
         add_file_log("info", f"Creating puzzle set ({n_puzzles} puzzles)")
-        # puzzles = Game.create_puzzle_set(filename=args['puzzle_file'])
-        # puzzle_solver(puzzles, n_puzzles, tset_folder, experimental=args["experimental"])
+        puzzles = Game.create_puzzle_set(filename=args['puzzle_file'])
+        puzzle_solver(puzzles, n_puzzles, tset_folder, experimental=args["experimental"])
         
     # training model
     model = load_model(models[-1])

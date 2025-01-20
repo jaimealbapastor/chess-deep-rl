@@ -10,5 +10,6 @@ progress.md
 full_games.txt
 savedmodel/
 programs/**/tset*
+evaluations
 
 activate.bash
